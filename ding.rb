@@ -5,21 +5,21 @@
 class Ding < Formula
   desc "Stream-based alerting daemon — single binary, zero infrastructure"
   homepage "https://ding.ing"
-  version "0.1.1"
+  version "0.2.0"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/zuchka/ding/releases/download/v0.1.1/ding_darwin_amd64.tar.gz"
-      sha256 "4f96df2360ea13e1b17f67ad280205d0367c927b046ea256353b24bf763bf91f"
+      url "https://github.com/zuchka/ding/releases/download/v0.2.0/ding_darwin_amd64.tar.gz"
+      sha256 "dd40c49f466e02febfb475afcdfa8a41e3fd98a0737bbb38867daa603dc17c4a"
 
       define_method(:install) do
         bin.install "ding"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/zuchka/ding/releases/download/v0.1.1/ding_darwin_arm64.tar.gz"
-      sha256 "0e51c1854af603668616c1b61655f2c5398169ad3656707c28643081db77bf81"
+      url "https://github.com/zuchka/ding/releases/download/v0.2.0/ding_darwin_arm64.tar.gz"
+      sha256 "8eadb0a20ae01c8f2fe6b2dd4e76859e7ad3ffa202d935003ab34bc7f4007513"
 
       define_method(:install) do
         bin.install "ding"
@@ -29,15 +29,15 @@ class Ding < Formula
 
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
-      url "https://github.com/zuchka/ding/releases/download/v0.1.1/ding_linux_amd64.tar.gz"
-      sha256 "453cbe6c95d321fea8c622b1afe47f754e3d5e37b39eabf491a16c3c71b1e4f6"
+      url "https://github.com/zuchka/ding/releases/download/v0.2.0/ding_linux_amd64.tar.gz"
+      sha256 "494f4eb64fa53d885f71e1f83c8bf1103ac274536f28f030dc0783260e6e3186"
       define_method(:install) do
         bin.install "ding"
       end
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/zuchka/ding/releases/download/v0.1.1/ding_linux_arm64.tar.gz"
-      sha256 "ad956bfe84e6ec5a68ba465858213d5ed9968078eeef6d3c5e98a499717ee52d"
+      url "https://github.com/zuchka/ding/releases/download/v0.2.0/ding_linux_arm64.tar.gz"
+      sha256 "dea1e32e3863cee485f10868fb0957756c4afb9e90f8bab137c1907d194b55a0"
       define_method(:install) do
         bin.install "ding"
       end
