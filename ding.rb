@@ -5,21 +5,21 @@
 class Ding < Formula
   desc "Stream-based alerting daemon — single binary, zero infrastructure"
   homepage "https://ding.ing"
-  version "0.13.0"
-  license "MIT"
+  version "0.14.0"
+  license "Apache-2.0"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/ding-labs/ding/releases/download/v0.13.0/ding_darwin_amd64.tar.gz"
-      sha256 "a64dafa55b0ff1f0f7574829c0f8f9a89b59c7d6cd14f688477b6d4171b76da3"
+      url "https://github.com/ding-labs/ding/releases/download/v0.14.0/ding_darwin_amd64.tar.gz"
+      sha256 "26a25e33a093372ebf796a18b059967a1a24a1c62aebae2861dc079da5c7fc9e"
 
       define_method(:install) do
         bin.install "ding"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/ding-labs/ding/releases/download/v0.13.0/ding_darwin_arm64.tar.gz"
-      sha256 "e99c1b4991faffa12d6e6d2fa808021471f2aedca7896116e718a7f0ef5f60df"
+      url "https://github.com/ding-labs/ding/releases/download/v0.14.0/ding_darwin_arm64.tar.gz"
+      sha256 "a3a75c1882d621b53eda5f9250e4dd3cc947d3335f4db3cf29fa446e4fb02e17"
 
       define_method(:install) do
         bin.install "ding"
@@ -29,15 +29,15 @@ class Ding < Formula
 
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
-      url "https://github.com/ding-labs/ding/releases/download/v0.13.0/ding_linux_amd64.tar.gz"
-      sha256 "f90d569bade728c5257be0e5b14b89dc6ce2ac9451a1d260663dcfa4faf5ac13"
+      url "https://github.com/ding-labs/ding/releases/download/v0.14.0/ding_linux_amd64.tar.gz"
+      sha256 "6c069c36c1147d43da8455637537e28c453c7a424155d00b24713fc6eae79be1"
       define_method(:install) do
         bin.install "ding"
       end
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/ding-labs/ding/releases/download/v0.13.0/ding_linux_arm64.tar.gz"
-      sha256 "f94cee803953d405eaa48c5b5ed917e68d3e2166028e3fe9138db7a1f38cf9f8"
+      url "https://github.com/ding-labs/ding/releases/download/v0.14.0/ding_linux_arm64.tar.gz"
+      sha256 "dbb8738ec72d16f1c2b52afe856a48ac980191f870a0f243b3a99cb788431a2f"
       define_method(:install) do
         bin.install "ding"
       end
@@ -45,6 +45,6 @@ class Ding < Formula
   end
 
   test do
-    system "#{bin}/ding", "--version"
+    system "#{bin}/ding", "version"
   end
 end
