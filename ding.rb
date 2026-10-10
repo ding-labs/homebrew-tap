@@ -36,8 +36,6 @@ class Ding < Formula
     end
   end
 
-  conflicts_with "ding-preview", because: "both provide the ding executable"
-
   def install
     libexec.install "ding"
     libexec.install "DingNotifications.app" if OS.mac?
