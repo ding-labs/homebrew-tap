@@ -7,7 +7,6 @@ class Ding < Formula
   homepage "https://ding.ing"
   version "0.15.0"
   license "Apache-2.0"
-  depends_on arch: [:arm64, :x86_64]
   depends_on macos: :ventura if OS.mac?
 
   on_macos do
