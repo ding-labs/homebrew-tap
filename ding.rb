@@ -7,6 +7,12 @@ class Ding < Formula
   homepage "https://ding.ing"
   version "0.15.1"
   license "Apache-2.0"
+
+  bottle do
+    root_url "https://github.com/ding-labs/ding/releases/download/v0.15.1"
+    sha256 cellar: :any_skip_relocation, arm64_sequoia: "a650b951a6df7059c9dc2e1a031227b1e24826d3a3d02116d588b925eff98cf0"
+    sha256 cellar: :any_skip_relocation, sequoia:       "fde0d0cb535a33f132aa37cf7b1a8c28ee6c9f9be5579032c1df495e667e6c9e"
+  end
   depends_on macos: :ventura if OS.mac?
 
   on_macos do
@@ -29,8 +35,6 @@ class Ding < Formula
       sha256 "ca8267db4f55a474385809aaf96a9a83d02323a6f4ffe77b58e7679ad52fc376"
     end
   end
-
-
 
   def install
     libexec.install "ding"
