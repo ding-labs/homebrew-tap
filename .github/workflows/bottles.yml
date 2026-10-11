@@ -5,7 +5,7 @@ on:
       version:
         description: Released Ding version without v
         required: true
-        default: '0.15.0'
+        default: '0.15.1'
 permissions:
   contents: read
 jobs:

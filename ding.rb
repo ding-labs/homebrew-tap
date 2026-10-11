@@ -5,36 +5,32 @@
 class Ding < Formula
   desc "Persistent watches and durable alerts for developers and agents"
   homepage "https://ding.ing"
-  version "0.15.0"
+  version "0.15.1"
   license "Apache-2.0"
-
-  bottle do
-    root_url "https://github.com/ding-labs/ding/releases/download/v0.15.0"
-    sha256 cellar: :any_skip_relocation, arm64_sequoia: "c55d75298cbb87f72d145429e10695971f843b10150a8322d8c1a3d50a745dab"
-    sha256 cellar: :any_skip_relocation, sequoia:       "887fd74f678d2566a2b9c687853462035a803844643bee29f34b2a833940703f"
-  end
   depends_on macos: :ventura if OS.mac?
 
   on_macos do
     on_arm do
-      url "https://github.com/ding-labs/ding/releases/download/v0.15.0/ding_darwin_arm64.tar.gz"
-      sha256 "ec0d4a18e8b325fd8197665af039b7e9f22fa77fe84d7fc38b2f721c1059d527"
+      url "https://github.com/ding-labs/ding/releases/download/v0.15.1/ding_darwin_arm64.tar.gz"
+      sha256 "d7a113f0acc7072fffb21052fc67f7b3a1f06bc06736fe326f2a1d258a952d80"
     end
     on_intel do
-      url "https://github.com/ding-labs/ding/releases/download/v0.15.0/ding_darwin_amd64.tar.gz"
-      sha256 "dd6f40a264077934605417e5e579924017373101356d73bc2b5f01fdeee8c841"
+      url "https://github.com/ding-labs/ding/releases/download/v0.15.1/ding_darwin_amd64.tar.gz"
+      sha256 "85f67b4a7becde98d6cb7db9b9a0a933e6e08e3d3e75bd6512af64b691342283"
     end
   end
   on_linux do
     on_arm do
-      url "https://github.com/ding-labs/ding/releases/download/v0.15.0/ding_linux_arm64.tar.gz"
-      sha256 "ece2c289cc430976c7283bcc3e82a8662924a9e982cbacee8a3503dcc14781ac"
+      url "https://github.com/ding-labs/ding/releases/download/v0.15.1/ding_linux_arm64.tar.gz"
+      sha256 "369fac1462d88f1332e14c04d9ea6fc486a1d4d92629f953d90436a6e308881b"
     end
     on_intel do
-      url "https://github.com/ding-labs/ding/releases/download/v0.15.0/ding_linux_amd64.tar.gz"
-      sha256 "092d661ed63eb29bc19bdd652aef432a86585f09cc2f31897ae48febd81966bb"
+      url "https://github.com/ding-labs/ding/releases/download/v0.15.1/ding_linux_amd64.tar.gz"
+      sha256 "ca8267db4f55a474385809aaf96a9a83d02323a6f4ffe77b58e7679ad52fc376"
     end
   end
+
+
 
   def install
     libexec.install "ding"
@@ -53,7 +49,7 @@ class Ding < Formula
   end
 
   test do
-    assert_match "0.15.0", shell_output("#{bin}/ding version")
+    assert_match "0.15.1", shell_output("#{bin}/ding version")
     assert_path_exists libexec/"DingNotifications.app/Contents/MacOS/DingNotifications" if OS.mac?
     system bin/"ding", "demo"
   end
