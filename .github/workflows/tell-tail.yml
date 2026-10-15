@@ -1,0 +1,161 @@
+name: Tell-Tail packaging
+on:
+  push:
+    paths: ['.github/workflows/tell-tail.yml', 'tell-tail.rb', 'README.md']
+  pull_request:
+    paths: ['.github/workflows/tell-tail.yml', 'tell-tail.rb', 'README.md']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published stable Tell-Tail release tag, such as v0.2.0
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: tell-tail-${{ github.event_name }}
+  cancel-in-progress: false
+jobs:
+  tooling:
+    strategy:
+      matrix:
+        os: [macos-14, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          repository: zuchka/tell-tail
+          path: source
+          persist-credentials: false
+      - name: Verify tooling and formula syntax without a published release
+        shell: bash
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+        run: |
+          python3 source/scripts/test_release_gate.py
+          python3 source/scripts/test_release_artifacts.py
+          python3 source/scripts/test_render_formula.py
+          python3 - <<'PY'
+          import pathlib, sys
+          sys.path.insert(0, 'source/scripts')
+          from render_formula import render
+          from release_artifacts import TARGETS, archive_name
+          manifest = {'version': '0.2.0', 'assets': [
+              {'target': t, 'name': archive_name('0.2.0', t), 'sha256': 'a' * 64}
+              for t in TARGETS]}
+          pathlib.Path('preview.rb').write_text(render(manifest, pathlib.Path('source/packaging/tell-tail.rb.in').read_text()))
+          PY
+          if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          fi
+          brew tap ding-labs/tap
+          cp preview.rb "$(brew --repository ding-labs/tap)/tell-tail.rb"
+          brew style --formula ding-labs/tap/tell-tail
+  fetch:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          repository: zuchka/tell-tail
+          persist-credentials: false
+      - name: Refuse drafts, prereleases, or mismatched artifacts
+        id: release
+        run: |
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, 'scripts')
+          from release_gate import VERSION
+          if not re.fullmatch('v' + VERSION, os.environ['RELEASE_TAG']):
+              raise SystemExit('A stable release tag is required')
+          PY
+          gh release view "$RELEASE_TAG" --repo zuchka/tell-tail \
+            --json isDraft,isPrerelease,tagName > release-status.json
+          mkdir -p assets generated
+          gh release download "$RELEASE_TAG" --repo zuchka/tell-tail --dir assets \
+            --pattern '*.tar.gz' --pattern release.json --pattern SHA256SUMS
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess, sys
+          sys.path.insert(0, 'scripts')
+          from release_artifacts import validate_manifest
+          status = json.load(open('release-status.json'))
+          manifest = json.load(open('assets/release.json'))
+          tag = os.environ['RELEASE_TAG']
+          if (status['isDraft'] or status['isPrerelease'] or status['tagName'] != tag
+                  or manifest['dirty'] or 'v' + manifest['version'] != tag):
+              raise SystemExit('Only a published stable, clean release can update the tap')
+          validate_manifest(manifest, pathlib.Path('assets'))
+          obj = json.loads(subprocess.check_output(['gh', 'api', 'repos/zuchka/tell-tail/git/ref/tags/' + tag]))['object']
+          if obj['type'] != 'commit' or obj['sha'] != manifest['source_commit']:
+              raise SystemExit('Release tag does not identify the packaged source commit')
+          pathlib.Path('generated/version.txt').write_text(manifest['version'] + '\n')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('version=' + manifest['version'] + '\n')
+          PY
+          python3 scripts/render_formula.py --assets assets --output generated/tell-tail.rb
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: tell-tail-formula
+          path: generated/*
+          if-no-files-found: error
+  install:
+    needs: fetch
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALL_CLEANUP: '1'
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tell-tail-formula
+          path: generated
+      - name: Install and test the generated formula
+        shell: bash
+        run: |
+          if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          fi
+          brew tap ding-labs/tap
+          cp generated/tell-tail.rb "$(brew --repository ding-labs/tap)/tell-tail.rb"
+          if brew command trust >/dev/null 2>&1; then
+            brew trust --formula ding-labs/tap/tell-tail
+          fi
+          brew style --formula ding-labs/tap/tell-tail
+          brew install --build-from-source ding-labs/tap/tell-tail
+          brew test ding-labs/tap/tell-tail
+  update:
+    needs: [tooling, fetch, install]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tell-tail-formula
+          path: generated
+      - name: Commit the tested formula without touching other packages
+        env:
+          VERSION: ${{ needs.fetch.outputs.version }}
+        run: |
+          cp generated/tell-tail.rb tell-tail.rb
+          git add tell-tail.rb
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "tell-tail $VERSION: install validated native archives"
+          git push origin HEAD:main
