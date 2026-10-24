@@ -19,7 +19,7 @@ jobs:
   tooling:
     strategy:
       matrix:
-        os: [macos-14, ubuntu-24.04]
+        os: [macos-14, ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -51,6 +51,11 @@ jobs:
           if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
             eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           fi
+          if ! command -v brew >/dev/null; then
+            curl -fsSL https://raw.githubusercontent.com/Homebrew/install/85d1a3fc80d8a63932f632aca8f787de11d14a64/install.sh -o "$RUNNER_TEMP/homebrew-install.sh"
+            NONINTERACTIVE=1 bash "$RUNNER_TEMP/homebrew-install.sh"
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          fi
           brew tap ding-labs/tap
           cp preview.rb "$(brew --repository ding-labs/tap)/tell-tail.rb"
           brew style --formula ding-labs/tap/tell-tail
@@ -63,30 +68,43 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       RELEASE_TAG: ${{ inputs.tag }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-        with:
-          repository: zuchka/tell-tail
-          persist-credentials: false
-      - name: Refuse drafts, prereleases, or mismatched artifacts
-        id: release
+      - name: Select a published stable release and its source commit
+        id: selection
         run: |
           python3 - <<'PY'
           import os, re
-          from pathlib import Path
-          import sys
-          sys.path.insert(0, 'scripts')
-          from release_gate import VERSION
+          VERSION = r'(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)'
           if not re.fullmatch('v' + VERSION, os.environ['RELEASE_TAG']):
               raise SystemExit('A stable release tag is required')
           PY
           gh release view "$RELEASE_TAG" --repo zuchka/tell-tail \
             --json isDraft,isPrerelease,tagName > release-status.json
+          gh api "repos/zuchka/tell-tail/git/ref/tags/$RELEASE_TAG" > tag-status.json
+          python3 - <<'PY'
+          import json, os
+          status = json.load(open('release-status.json'))
+          obj = json.load(open('tag-status.json'))['object']
+          if (status['isDraft'] or status['isPrerelease'] or status['tagName'] != os.environ['RELEASE_TAG']
+                  or obj['type'] != 'commit'):
+              raise SystemExit('A published stable release with a commit tag is required')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('commit=' + obj['sha'] + '\n')
+          PY
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          repository: zuchka/tell-tail
+          ref: ${{ steps.selection.outputs.commit }}
+          path: source
+          persist-credentials: false
+      - name: Verify artifacts with the selected release's packaging tools
+        id: release
+        run: |
           mkdir -p assets generated
           gh release download "$RELEASE_TAG" --repo zuchka/tell-tail --dir assets \
             --pattern '*.tar.gz' --pattern release.json --pattern SHA256SUMS
           python3 - <<'PY'
-          import json, os, pathlib, subprocess, sys
-          sys.path.insert(0, 'scripts')
+          import json, os, pathlib, sys
+          sys.path.insert(0, 'source/scripts')
           from release_artifacts import validate_manifest
           status = json.load(open('release-status.json'))
           manifest = json.load(open('assets/release.json'))
@@ -95,14 +113,14 @@ jobs:
                   or manifest['dirty'] or 'v' + manifest['version'] != tag):
               raise SystemExit('Only a published stable, clean release can update the tap')
           validate_manifest(manifest, pathlib.Path('assets'))
-          obj = json.loads(subprocess.check_output(['gh', 'api', 'repos/zuchka/tell-tail/git/ref/tags/' + tag]))['object']
+          obj = json.load(open('tag-status.json'))['object']
           if obj['type'] != 'commit' or obj['sha'] != manifest['source_commit']:
               raise SystemExit('Release tag does not identify the packaged source commit')
           pathlib.Path('generated/version.txt').write_text(manifest['version'] + '\n')
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               output.write('version=' + manifest['version'] + '\n')
           PY
-          python3 scripts/render_formula.py --assets assets --output generated/tell-tail.rb
+          python3 source/scripts/render_formula.py --assets assets --output generated/tell-tail.rb
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: tell-tail-formula
@@ -113,7 +131,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, ubuntu-24.04]
+        os: [macos-14, ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.os }}
     env:
       HOMEBREW_NO_AUTO_UPDATE: '1'
@@ -127,6 +145,11 @@ jobs:
         shell: bash
         run: |
           if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          fi
+          if ! command -v brew >/dev/null; then
+            curl -fsSL https://raw.githubusercontent.com/Homebrew/install/85d1a3fc80d8a63932f632aca8f787de11d14a64/install.sh -o "$RUNNER_TEMP/homebrew-install.sh"
+            NONINTERACTIVE=1 bash "$RUNNER_TEMP/homebrew-install.sh"
             eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           fi
           brew tap ding-labs/tap
