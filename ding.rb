@@ -8,6 +8,12 @@ class Ding < Formula
   version "0.15.3"
   license "Apache-2.0"
 
+  bottle do
+    root_url "https://github.com/ding-labs/ding/releases/download/v0.15.3"
+    sha256 cellar: :any_skip_relocation, arm64_sequoia: "616b10fdfa0078af07bb5ae807a2cee5a80814e85e277a18b8de6bf4ba969069"
+    sha256 cellar: :any_skip_relocation, sequoia: "80fd04eea4c2e0cb671508e9e0f2bc2450d471c0c607e883c3c44c223ae1b70d"
+  end
+
   depends_on macos: :ventura if OS.mac?
 
   on_macos do
