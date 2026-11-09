@@ -34,6 +34,17 @@ jobs:
             brew trust --formula ding-labs/tap/ding
           fi
           brew info --json=v2 ding-labs/tap/ding | jq -e '.formulae[0].versions.stable == env.RELEASE_VERSION'
+      # The install below reuses this checksum-verified archive. The public
+      # step result lets the download report subtract one fetch on success.
+      - name: Check the native archive cache
+        id: archive
+        run: |
+          if [[ ! -f "$(brew --cache --build-from-source ding-labs/tap/ding)" ]]; then
+            echo 'missing=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Fetch Ding release archive v${{ inputs.version }} (${{ matrix.arch }})
+        if: steps.archive.outputs.missing == 'true'
+        run: brew fetch --build-bottle ding-labs/tap/ding
       - name: Install and exercise the complete package
         run: |
           brew install --build-bottle ding-labs/tap/ding
