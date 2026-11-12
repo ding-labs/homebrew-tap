@@ -19,7 +19,7 @@ jobs:
   tooling:
     strategy:
       matrix:
-        os: [macos-14, ubuntu-24.04, ubuntu-24.04-arm]
+        os: [macos-15, ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -132,7 +132,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, ubuntu-24.04, ubuntu-24.04-arm]
+        os: [macos-15, ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.os }}
     env:
       HOMEBREW_NO_AUTO_UPDATE: '1'
