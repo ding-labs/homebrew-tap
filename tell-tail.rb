@@ -1,26 +1,26 @@
 class TellTail < Formula
   desc "Bounded-memory log throughput and severity monitor"
   homepage "https://github.com/ding-labs/tell-tail"
-  version "0.3.0"
+  version "0.4.0"
   license "MIT"
 
   on_macos do
     depends_on arch: :arm64
     depends_on macos: :sonoma
     on_arm do
-      url "https://github.com/ding-labs/tell-tail/releases/download/v0.3.0/tell-tail-0.3.0-aarch64-apple-darwin.tar.gz"
-      sha256 "db144ca5bc2c337cecc660397e3bfc8973c92251a4b83746b52025a33f018c4c"
+      url "https://github.com/ding-labs/tell-tail/releases/download/v0.4.0/tell-tail-0.4.0-aarch64-apple-darwin.tar.gz"
+      sha256 "2442860972633f9fb64beb5e45d74244c5b59f400076604af60cba44809d15dc"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/ding-labs/tell-tail/releases/download/v0.3.0/tell-tail-0.3.0-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "8c853f79174cc2681085933f7466522d2097d4f6c77646457dd921d545dfae30"
+      url "https://github.com/ding-labs/tell-tail/releases/download/v0.4.0/tell-tail-0.4.0-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "4487fc41128501c0640ec29d860aad0c6fff71839a1f5966fd59ae8ae6acb9b9"
     end
     on_arm do
-      url "https://github.com/ding-labs/tell-tail/releases/download/v0.3.0/tell-tail-0.3.0-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "b54ca204af51303c3206a335db0be04bbbbeedbac728e9b88f978fba40130ee9"
+      url "https://github.com/ding-labs/tell-tail/releases/download/v0.4.0/tell-tail-0.4.0-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "9539104e22ec82c81bdf9f9681f26911504f16689fe7fce0b7033c9a2d48cae5"
     end
   end
 
